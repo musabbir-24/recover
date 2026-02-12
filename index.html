@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Archive · Drive Hub</title>
+    <!-- Font Awesome 6 (free icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #0a0c12 0%, #141a24 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            position: relative;
+            isolation: isolate;
+        }
+
+        /* subtle animated grid */
+        body::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(96, 125, 180, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(96, 125, 180, 0.08) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .glass-panel {
+            background: rgba(12, 18, 28, 0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 56px;
+            padding: 56px 64px;
+            box-shadow: 0 30px 50px -16px rgba(0,0,0,0.8), inset 0 1px 2px rgba(255,255,255,0.06);
+            width: 100%;
+            max-width: 820px;
+            z-index: 2;
+            transition: all 0.3s ease;
+        }
+
+        .header-badge {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header-badge h1 {
+            color: rgba(230, 240, 255, 0.95);
+            font-weight: 600;
+            font-size: 28px;
+            letter-spacing: -0.5px;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .header-badge h1 i {
+            color: #7aa2ff;
+            text-shadow: 0 0 15px #3a7bff;
+        }
+
+        .subhead {
+            color: rgba(180, 200, 240, 0.7);
+            font-size: 15px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .button-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: stretch;
+            gap: 40px;
+            margin-top: 16px;
+        }
+
+        .button-card {
+            flex: 1 1 260px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(8, 12, 20, 0.4);
+            border-radius: 48px;
+            padding: 32px 24px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(8px);
+            transition: transform 0.25s ease, border-color 0.2s;
+        }
+
+        .button-card:hover {
+            border-color: rgba(100, 180, 255, 0.25);
+            background: rgba(15, 22, 36, 0.6);
+            transform: translateY(-5px);
+        }
+
+        .card-icon {
+            font-size: 48px;
+            margin-bottom: 24px;
+            background: rgba(0, 0, 0, 0.35);
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 10px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            width: 100%;
+            padding: 20px 28px;
+            border-radius: 60px;
+            font-size: 20px;
+            font-weight: 600;
+            text-decoration: none;
+            color: white;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1.5px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 
+                0 10px 0 rgba(0, 0, 0, 0.35),
+                0 15px 30px rgba(0, 0, 0, 0.5),
+                inset 0 1px 2px rgba(255, 255, 255, 0.1);
+            transition: all 0.12s cubic-bezier(0.2, 0.9, 0.4, 1);
+            overflow: hidden;
+            z-index: 1;
+            text-shadow: 0 2px 4px black;
+            letter-spacing: 1.2px;
+        }
+
+        .btn i {
+            font-size: 24px;
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5));
+        }
+
+        /* CHAT ARCHIVE button — local file, deep purple/blue */
+        .btn-chat {
+            background: linear-gradient(145deg, #1e1a30, #151129);
+            border-color: rgba(160, 140, 255, 0.55);
+        }
+
+        .btn-chat i {
+            color: #c0a5ff;
+            text-shadow: 0 0 12px #9f7affb0;
+        }
+
+        .btn-chat:hover {
+            background: linear-gradient(145deg, #2a2342, #1c1736);
+            border-color: #cbb9ff;
+            box-shadow: 
+                0 6px 0 #2e254a,
+                0 22px 40px -6px #a07affb0;
+            transform: translateY(-2px);
+        }
+
+        /* DRIVE FOLDER button — google drive teal/green */
+        .btn-drive {
+            background: linear-gradient(145deg, #102c2c, #0a1f22);
+            border-color: rgba(80, 220, 180, 0.55);
+        }
+
+        .btn-drive i {
+            color: #8ff0d0;
+            text-shadow: 0 0 12px #2ad4b0b0;
+        }
+
+        .btn-drive:hover {
+            background: linear-gradient(145deg, #173d3d, #0e292b);
+            border-color: #a8ffe6;
+            box-shadow: 
+                0 6px 0 #1a4640,
+                0 22px 40px -6px #3eeac0b0;
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(8px);
+            box-shadow: 
+                0 2px 0 rgba(0, 0, 0, 0.6),
+                0 18px 35px rgba(0, 0, 0, 0.6);
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 60px;
+            padding: 2px;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), transparent 70%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .btn:hover::after {
+            opacity: 1;
+        }
+
+        .url-hint {
+            margin-top: 20px;
+            font-size: 13px;
+            color: rgba(190, 210, 240, 0.65);
+            background: rgba(0, 0, 0, 0.45);
+            padding: 8px 22px;
+            border-radius: 60px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.06);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 450;
+            transition: 0.2s;
+        }
+
+        .url-hint i {
+            font-size: 12px;
+            color: #b0d0ff;
+        }
+
+        .button-card:hover .url-hint {
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(20, 35, 55, 0.8);
+            border-color: rgba(120, 200, 255, 0.3);
+        }
+
+        .location-tag {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0,0,0,0.3);
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            color: #b0c8f0;
+            border: 1px solid rgba(255,255,255,0.04);
+            margin-top: 8px;
+        }
+
+        .footer-note {
+            margin-top: 48px;
+            text-align: center;
+            color: rgba(200, 220, 255, 0.35);
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .footer-note span {
+            background: rgba(20, 30, 45, 0.6);
+            padding: 8px 22px;
+            border-radius: 60px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.04);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        @media (max-width: 700px) {
+            .glass-panel { padding: 40px 28px; border-radius: 40px; }
+            .button-grid { gap: 28px; }
+            .btn { padding: 18px 24px; font-size: 18px; }
+            .card-icon { width: 80px; height: 80px; font-size: 40px; }
+        }
+
+        @media (max-width: 550px) {
+            .button-grid { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-panel">
+        
+        <!-- HEADER / TITLE -->
+        <div class="header-badge">
+            <h1>
+                <i class="fas fa-folder-open"></i> 
+                ARCHIVE · DRIVE
+                <i class="fas fa-cloud"></i>
+            </h1>
+            <div class="subhead">
+                <i class="fas fa-database" style="opacity: 0.7;"></i>  
+                local · cloud
+                <i class="fas fa-globe" style="opacity: 0.7;"></i>
+            </div>
+        </div>
+
+        <!-- TWO MAIN BUTTONS — exactly as requested -->
+        <div class="button-grid">
+            
+            <!-- BUTTON 1: rebuilt_chat.html (local file, same folder) -->
+            <div class="button-card">
+                <div class="card-icon">
+                    <i class="fas fa-comments" style="color: #b59eff; filter: drop-shadow(0 8px 10px #8050d0);"></i>
+                </div>
+                <div style="font-size: 13px; font-weight: 600; letter-spacing: 3px; color: #b5c8ff; margin-bottom: 18px; text-transform: uppercase;">
+                    <i class="fas fa-archive"></i> CHAT LOG
+                </div>
+                
+                <!-- LINK TO LOCAL HTML FILE (SAME FOLDER) -->
+                <a href="rebuilt_chat.html" target="_blank" rel="noopener noreferrer" class="btn btn-chat">
+                    <i class="fas fa-message"></i>
+                    <span>chat.html</span>
+                    <i class="fas fa-folder-open" style="font-size: 18px;"></i>
+                </a>
+                
+                <div class="url-hint">
+                    <i class="fas fa-file-code"></i> chat.html
+                    <i class="fas fa-check-circle" style="color: #88dd88;"></i>
+                </div>
+                <div class="location-tag">
+                    <i class="fas fa-folder"></i> same folder · local archive
+                </div>
+            </div>
+
+            <!-- decorative subtle divider (responsive) -->
+            <div style="display: flex; align-items: center; color: rgba(255,255,255,0.12); font-size: 28px; padding: 0 4px;">
+                <i class="fas fa-ellipsis-vertical"></i>
+                <span style="margin: 0 8px; font-size: 20px;">⸻</span>
+                <i class="fas fa-ellipsis-vertical"></i>
+            </div>
+            
+            <!-- BUTTON 2: GOOGLE DRIVE FOLDER (shared link) -->
+            <div class="button-card">
+                <div class="card-icon">
+                    <i class="fab fa-google-drive" style="color: #8aecce; filter: drop-shadow(0 8px 10px #1f8a70);"></i>
+                </div>
+                <div style="font-size: 13px; font-weight: 600; letter-spacing: 3px; color: #a0f0d0; margin-bottom: 18px; text-transform: uppercase;">
+                    <i class="fas fa-cloud"></i> DRIVE HUB
+                </div>
+                
+                <!-- LINK TO GOOGLE DRIVE FOLDER -->
+                <a href="https://drive.google.com/drive/folders/1WKSgg6jKU7CnAN9rUJdGcWHDQs7yiktq?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-drive">
+                    <i class="fab fa-google-drive"></i>
+                    <span>Chat Backup</span>
+                    <i class="fas fa-folder-tree" style="font-size: 18px;"></i>
+                </a>
+                
+                <div class="url-hint">
+                    <i class="fas fa-link"></i> drive.google.com · shared folder
+                    <i class="fas fa-external-link-alt"></i>
+                </div>
+                <div class="location-tag">
+                    <i class="fas fa-lock-open"></i> full access · backup 2026
+                </div>
+            </div>
+        </div>
+        
+        <!-- STATUS & TIMESTAMP -->
+        <div class="footer-note">
+            <span>
+                <i class="fas fa-circle" style="color: #88dd88; font-size: 10px;"></i> 
+                ready · both links active
+            </span>
+            <span>
+                <i class="fas-regular fa-calendar"></i> 
+                FEB 2026 · INSTAGRAM CHAT
+            </span>
+            <span>
+                <i class="fas fa-shield"></i> local + cloud
+            </span>
+        </div>
+
+        <!-- tiny helper: direct path reminder -->
+        <div style="margin-top: 24px; text-align: center; font-size: 11px; color: rgba(180,200,240,0.25); letter-spacing: 1.2px;">
+            <span style="background: rgba(0,0,0,0.25); padding: 6px 18px; border-radius: 60px;">
+                ⚡ 1. rebuilt_chat.html (this folder)  •  2. Google Drive (backup folder)
+            </span>
+        </div>
+    </div>
+
+    <!-- tiny floating badge — shows explicit file names -->
+    <div style="position: fixed; bottom: 20px; left: 0; right: 0; text-align: center; color: rgba(210,230,255,0.3); font-size: 11px; z-index: 99; pointer-events: none; backdrop-filter: blur(4px);">
+        <span style="background: rgba(8,12,24,0.6); padding: 8px 26px; border-radius: 60px; border: 1px solid rgba(255,255,255,0.05);">
+            <i class="fas-regular fa-file-lines"></i> rebuilt_chat.html 
+            <span style="margin: 0 12px; opacity: 0.3;">|</span> 
+            <i class="fab fa-google-drive"></i> drive.google.com/…WKSgg6jKU7
+        </span>
+    </div>
+</body>
+</html>
